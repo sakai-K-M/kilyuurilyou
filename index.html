@@ -842,13 +842,24 @@ init();
 </script>
 </body>
 
+<!-- ログインUI（bodyの中に置く） -->
+<div style="margin-top:40px;">
+  <h2>ログイン</h2>
+  <input id="email" type="email" placeholder="メールアドレス">
+  <input id="password" type="password" placeholder="パスワード">
+  <button id="signup">新規登録</button>
+  <button id="login">ログイン</button>
+  <p id="status"></p>
+</div>
+
+<!-- Firebase（bodyの外に置く） -->
 <script type="module">
-  // Firebase SDK 読み込み
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
   import { getFirestore, doc, onSnapshot, setDoc } 
     from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
-  // Firebase 設定
   const firebaseConfig = {
     apiKey: "AIzaSyC1MnMwO696MaBEdTNrr9r_TXHy7WrOvuM",
     authDomain: "otamesideyaltuteiru.firebaseapp.com",
@@ -858,20 +869,53 @@ init();
     appId: "1:800699206830:web:7caf540fcc4aceeac4f13f"
   };
 
-  // Firebase 初期化
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  // Firestore にテスト書き込み（ここが重要！）
+  // Firestore テスト書き込み
   await setDoc(doc(db, "test", "first"), {
     message: "Hello Firebase!"
   });
 
-  console.log("書き込み成功");
-
-  // Firestore の "test/first" をリアルタイム監視
+  // Firestore リアルタイム監視
   onSnapshot(doc(db, "test", "first"), (docSnap) => {
     console.log("リアルタイム更新:", docSnap.data());
+  });
+
+  // 新規登録
+  document.getElementById("signup").onclick = async () => {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, pass);
+      document.getElementById("status").textContent = "新規登録成功！";
+    } catch (e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  };
+
+  // ログイン
+  document.getElementById("login").onclick = async () => {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      document.getElementById("status").textContent = "ログイン成功！";
+    } catch (e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  };
+
+  // ログイン状態の監視
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("ログイン中:", user.email);
+    } else {
+      console.log("ログアウト中");
+    }
   });
 </script>
 
