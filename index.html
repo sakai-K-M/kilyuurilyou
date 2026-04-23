@@ -10,8 +10,10 @@
 
 <input id="email" type="email" placeholder="メールアドレス"><br>
 <input id="password" type="password" placeholder="パスワード"><br>
+
+<!-- ★ここにログイン・ログアウトボタンがある★ -->
 <button id="login">ログイン</button>
-<button id="logout">ログアウト</button> <!-- ← 追加 -->
+<button id="logout">ログアウト</button>
 
 <p id="status"></p>
 
@@ -57,7 +59,7 @@
     }
   };
 
-  // 🔥 ログアウト処理（追加）
+  // ★ログアウト処理
   document.getElementById("logout").onclick = async () => {
     await signOut(auth);
     document.getElementById("status").textContent = "ログアウトしました";
@@ -68,11 +70,10 @@
     const status = document.getElementById("status");
 
     if (user) {
-      // Firestore から role を取得
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
 
-      let role = "user"; // デフォルト
+      let role = "user";
       if (snap.exists()) {
         role = snap.data().role || "user";
       }
