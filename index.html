@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ログインテスト</title>
+<title>ログインテスト（role 判定付き）</title>
 </head>
 <body>
 
-<h2>ログインテストページ</h2>
+<h2>ログインテスト</h2>
 
 <input id="email" type="email" placeholder="メールアドレス"><br>
 <input id="password" type="password" placeholder="パスワード"><br>
@@ -18,11 +18,17 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
   import { 
     getAuth, 
-    createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
     onAuthStateChanged 
   } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
+  import { 
+    getFirestore, 
+    doc, 
+    getDoc 
+  } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+  // Firebase 設定
   const firebaseConfig = {
     apiKey: "AIzaSyC1MnMwO696MaBEdTNrr9r_TXHy7WrOvuM",
     authDomain: "otamesideyaltuteiru.firebaseapp.com",
@@ -34,10 +40,9 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
 
-
-
-  // ログイン
+  // ログイン処理
   document.getElementById("login").onclick = async () => {
     const email = document.getElementById("email").value;
     const pass = document.getElementById("password").value;
@@ -50,12 +55,28 @@
     }
   };
 
-  // ログイン状態監視
-  onAuthStateChanged(auth, (user) => {
+  // ログイン状態監視 + role 判定
+  onAuthStateChanged(auth, async (user) => {
+    const status = document.getElementById("status");
+
     if (user) {
-      document.getElementById("status").textContent = "ログイン中: " + user.email;
+      // Firestore から role を取得
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      let role = "user"; // デフォルト
+      if (snap.exists()) {
+        role = snap.data().role || "user";
+      }
+
+      if (role === "admin") {
+        status.textContent = "管理者としてログイン中: " + user.email;
+      } else {
+        status.textContent = "一般ユーザーとしてログイン中: " + user.email;
+      }
+
     } else {
-      document.getElementById("status").textContent = "ログアウト中";
+      status.textContent = "ログアウト中";
     }
   });
 </script>
