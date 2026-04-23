@@ -3,6 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <title>ログインテスト</title>
+
+  <style>
+    body {
+      background-color: pink;
+      font-size: 20px;
+      padding: 20px;
+    }
+    #adminMessage {
+      color: red;
+      font-weight: bold;
+      margin-top: 20px;
+      font-size: 28px;
+    }
+  </style>
 </head>
 <body>
 
@@ -15,8 +29,9 @@
   <button id="logout">ログアウト</button>
 
   <p id="status">ログアウト中</p>
+  <p id="adminMessage"></p>
 
-  <!-- ★★★ 必ず body の一番下に置く！ ★★★ -->
+  <!-- ★ 必ず body の一番下に置く -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
     import { 
@@ -48,7 +63,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ★ GitHub Pages のサブフォルダでもログイン状態を保持する設定
+    // ★ サブフォルダでもログイン状態を保持
     await setPersistence(auth, browserLocalPersistence);
 
     // ログイン処理
@@ -68,11 +83,13 @@
     document.getElementById("logout").onclick = async () => {
       await signOut(auth);
       document.getElementById("status").textContent = "ログアウトしました";
+      document.getElementById("adminMessage").textContent = "";
     };
 
     // ログイン状態監視 + role 判定
     onAuthStateChanged(auth, async (user) => {
       const status = document.getElementById("status");
+      const adminMessage = document.getElementById("adminMessage");
 
       if (user) {
         console.log("ログイン中のUID:", user.uid);
@@ -87,12 +104,15 @@
 
         if (role === "admin") {
           status.textContent = "管理者としてログイン中: " + user.email;
+          adminMessage.textContent = "成功です！";
         } else {
           status.textContent = "一般ユーザーとしてログイン中: " + user.email;
+          adminMessage.textContent = "";
         }
 
       } else {
         status.textContent = "ログアウト中";
+        adminMessage.textContent = "";
       }
     });
   </script>
