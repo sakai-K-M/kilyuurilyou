@@ -1,28 +1,12 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>ログインテスト（role 判定付き）</title>
-</head>
-<body>
-
-<h2>ログインテスト</h2>
-
-<input id="email" type="email" placeholder="メールアドレス"><br>
-<input id="password" type="password" placeholder="パスワード"><br>
-
-<button id="login">ログイン</button>
-<button id="logout">ログアウト</button>
-
-<p id="status"></p>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
   import { 
     getAuth, 
     signInWithEmailAndPassword, 
     onAuthStateChanged,
-    signOut
+    signOut,
+    setPersistence,
+    browserLocalPersistence
   } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
   import { 
@@ -44,6 +28,9 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+
+  // ★ これを追加（サブフォルダでもログイン状態を保持）
+  setPersistence(auth, browserLocalPersistence);
 
   // ログイン処理
   document.getElementById("login").onclick = async () => {
@@ -69,7 +56,6 @@
     const status = document.getElementById("status");
 
     if (user) {
-      // ★ ここでログイン中の UID をコンソールに出す
       console.log("ログイン中のUID:", user.uid);
 
       const ref = doc(db, "users", user.uid);
@@ -91,6 +77,3 @@
     }
   });
 </script>
-
-</body>
-</html>
