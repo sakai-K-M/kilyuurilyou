@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>ログインテスト（role 判定付き）</title>
+  <meta charset="UTF-8">
+  <title>ログインテスト（role 判定付き）</title>
 </head>
 <body>
 
@@ -11,7 +11,6 @@
 <input id="email" type="email" placeholder="メールアドレス"><br>
 <input id="password" type="password" placeholder="パスワード"><br>
 
-<!-- ★ここにログイン・ログアウトボタンがある★ -->
 <button id="login">ログイン</button>
 <button id="logout">ログアウト</button>
 
@@ -45,7 +44,6 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  window.auth = auth;
 
   // ログイン処理
   document.getElementById("login").onclick = async () => {
@@ -60,7 +58,7 @@
     }
   };
 
-  // ★ログアウト処理
+  // ログアウト処理
   document.getElementById("logout").onclick = async () => {
     await signOut(auth);
     document.getElementById("status").textContent = "ログアウトしました";
@@ -71,6 +69,9 @@
     const status = document.getElementById("status");
 
     if (user) {
+      // ★ ここでログイン中の UID をコンソールに出す
+      console.log("ログイン中のUID:", user.uid);
+
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
 
