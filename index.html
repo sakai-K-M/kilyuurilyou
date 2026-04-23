@@ -841,13 +841,14 @@ function save() {
 init();
 </script>
 </body>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // Your web app's Firebase configuration
+<script type="module">
+  // Firebase SDK 読み込み
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+  import { getFirestore, doc, onSnapshot, setDoc } 
+    from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+  // Firebase 設定
   const firebaseConfig = {
     apiKey: "AIzaSyC1MnMwO696MaBEdTNrr9r_TXHy7WrOvuM",
     authDomain: "otamesideyaltuteiru.firebaseapp.com",
@@ -857,7 +858,21 @@ init();
     appId: "1:800699206830:web:7caf540fcc4aceeac4f13f"
   };
 
-  // Initialize Firebase
+  // Firebase 初期化
   const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Firestore にテスト書き込み
+  await setDoc(doc(db, "test", "first"), {
+    message: "Hello Firebase!"
+  });
+
+  console.log("書き込み成功");
+
+  // Firestore の "test/first" をリアルタイム監視
+  onSnapshot(doc(db, "test", "first"), (docSnap) => {
+    console.log("リアルタイム更新:", docSnap.data());
+  });
 </script>
+
 </html>
