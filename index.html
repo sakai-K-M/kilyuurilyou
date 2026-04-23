@@ -851,12 +851,19 @@ init();
   <p id="status"></p>
 </div>
 
+<!-- ★★★ ここに総合コメント欄を追加 ★★★ -->
+<div id="summarySection" style="display:none;">
+  <h3>総合コメント（強いユーザーのみ）</h3>
+  <textarea id="summary"></textarea>
+  <button id="saveSummary">保存</button>
+</div>
+
 </body>
 
 <!-- ★★★ Firebase（bodyの外に置く） ★★★ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-  import { getFirestore, doc, onSnapshot, setDoc } 
+  import { getFirestore, doc, onSnapshot, setDoc, getDoc } 
     from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
@@ -884,13 +891,20 @@ init();
     console.log("リアルタイム更新:", docSnap.data());
   });
 
-  // 新規登録
+  // ★★★ 新規登録（role を user として保存）★★★
   document.getElementById("signup").onclick = async () => {
     const email = document.getElementById("email").value;
     const pass = document.getElementById("password").value;
 
     try {
-      await createUserWithEmailAndPassword(auth, email, pass);
+      const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+      const uid = userCred.user.uid;
+
+      // ★ 新規ユーザーは普通ユーザーとして登録
+      await setDoc(doc(db, "users", uid), {
+        role: "user"
+      });
+
       document.getElementById("status").textContent = "新規登録成功！";
     } catch (e) {
       document.getElementById("status").textContent = "エラー: " + e.message;
@@ -910,14 +924,27 @@ init();
     }
   };
 
-  // ログイン状態の監視
-  onAuthStateChanged(auth, (user) => {
+  // ★★★ ログイン状態の監視（role を読み取る）★★★
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       console.log("ログイン中:", user.email);
+
+      const uid = user.uid;
+      const userDoc = await getDoc(doc(db, "users", uid));
+      const role = userDoc.data().role;
+
+      console.log("role:", role);
+
+      // ★ role に応じて UI を出し分ける
+      if (role === "user") {
+        document.getElementById("summarySection").style.display = "none";
+      } else if (role === "admin") {
+        document.getElementById("summarySection").style.display = "block";
+      }
+
     } else {
       console.log("ログアウト中");
     }
   });
 </script>
-
 </html>
