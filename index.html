@@ -11,6 +11,7 @@
 <input id="email" type="email" placeholder="メールアドレス"><br>
 <input id="password" type="password" placeholder="パスワード"><br>
 <button id="login">ログイン</button>
+<button id="logout">ログアウト</button> <!-- ← 追加 -->
 
 <p id="status"></p>
 
@@ -19,7 +20,8 @@
   import { 
     getAuth, 
     signInWithEmailAndPassword, 
-    onAuthStateChanged 
+    onAuthStateChanged,
+    signOut
   } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
   import { 
@@ -53,6 +55,12 @@
     } catch (e) {
       document.getElementById("status").textContent = "エラー: " + e.message;
     }
+  };
+
+  // 🔥 ログアウト処理（追加）
+  document.getElementById("logout").onclick = async () => {
+    await signOut(auth);
+    document.getElementById("status").textContent = "ログアウトしました";
   };
 
   // ログイン状態監視 + role 判定
