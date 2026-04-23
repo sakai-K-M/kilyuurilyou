@@ -1,79 +1,101 @@
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-  import { 
-    getAuth, 
-    signInWithEmailAndPassword, 
-    onAuthStateChanged,
-    signOut,
-    setPersistence,
-    browserLocalPersistence
-  } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ログインテスト</title>
+</head>
+<body>
 
-  import { 
-    getFirestore, 
-    doc, 
-    getDoc 
-  } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+  <h2>ログインテスト</h2>
 
-  // Firebase 設定
-  const firebaseConfig = {
-    apiKey: "AIzaSyC1MnMwO696MaBEdTNrr9r_TXHy7WrOvuM",
-    authDomain: "otamesideyaltuteiru.firebaseapp.com",
-    projectId: "otamesideyaltuteiru",
-    storageBucket: "otamesideyaltuteiru.firebasestorage.app",
-    messagingSenderId: "800699206830",
-    appId: "1:800699206830:web:7caf540fcc4aceeac4f13f"
-  };
+  <input id="email" type="email" placeholder="メールアドレス"><br>
+  <input id="password" type="password" placeholder="パスワード"><br>
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  <button id="login">ログイン</button>
+  <button id="logout">ログアウト</button>
 
-  // ★ これを追加（サブフォルダでもログイン状態を保持）
-  setPersistence(auth, browserLocalPersistence);
+  <p id="status">ログアウト中</p>
 
-  // ログイン処理
-  document.getElementById("login").onclick = async () => {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
+  <!-- ★★★ 必ず body の一番下に置く！ ★★★ -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      onAuthStateChanged,
+      signOut,
+      setPersistence,
+      browserLocalPersistence
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
 
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-      document.getElementById("status").textContent = "ログイン成功！";
-    } catch (e) {
-      document.getElementById("status").textContent = "エラー: " + e.message;
-    }
-  };
+    import { 
+      getFirestore, 
+      doc, 
+      getDoc 
+    } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-  // ログアウト処理
-  document.getElementById("logout").onclick = async () => {
-    await signOut(auth);
-    document.getElementById("status").textContent = "ログアウトしました";
-  };
+    // Firebase 設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyC1MnMwO696MaBEdTNrr9r_TXHy7WrOvuM",
+      authDomain: "otamesideyaltuteiru.firebaseapp.com",
+      projectId: "otamesideyaltuteiru",
+      storageBucket: "otamesideyaltuteiru.firebasestorage.app",
+      messagingSenderId: "800699206830",
+      appId: "1:800699206830:web:7caf540fcc4aceeac4f13f"
+    };
 
-  // ログイン状態監視 + role 判定
-  onAuthStateChanged(auth, async (user) => {
-    const status = document.getElementById("status");
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    if (user) {
-      console.log("ログイン中のUID:", user.uid);
+    // ★ GitHub Pages のサブフォルダでもログイン状態を保持する設定
+    await setPersistence(auth, browserLocalPersistence);
 
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
+    // ログイン処理
+    document.getElementById("login").onclick = async () => {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
 
-      let role = "user";
-      if (snap.exists()) {
-        role = snap.data().role || "user";
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        document.getElementById("status").textContent = "ログイン成功！";
+      } catch (e) {
+        document.getElementById("status").textContent = "エラー: " + e.message;
       }
+    };
 
-      if (role === "admin") {
-        status.textContent = "管理者としてログイン中: " + user.email;
+    // ログアウト処理
+    document.getElementById("logout").onclick = async () => {
+      await signOut(auth);
+      document.getElementById("status").textContent = "ログアウトしました";
+    };
+
+    // ログイン状態監視 + role 判定
+    onAuthStateChanged(auth, async (user) => {
+      const status = document.getElementById("status");
+
+      if (user) {
+        console.log("ログイン中のUID:", user.uid);
+
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+
+        let role = "user";
+        if (snap.exists()) {
+          role = snap.data().role || "user";
+        }
+
+        if (role === "admin") {
+          status.textContent = "管理者としてログイン中: " + user.email;
+        } else {
+          status.textContent = "一般ユーザーとしてログイン中: " + user.email;
+        }
+
       } else {
-        status.textContent = "一般ユーザーとしてログイン中: " + user.email;
+        status.textContent = "ログアウト中";
       }
+    });
+  </script>
 
-    } else {
-      status.textContent = "ログアウト中";
-    }
-  });
-</script>
+</body>
+</html>
