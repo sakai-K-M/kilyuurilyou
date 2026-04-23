@@ -862,7 +862,7 @@ init();
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Firestore にテスト書き込み
+  // Firestore にテスト書き込み（ここが重要！）
   await setDoc(doc(db, "test", "first"), {
     message: "Hello Firebase!"
   });
