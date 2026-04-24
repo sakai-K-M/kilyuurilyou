@@ -38,7 +38,7 @@
   <textarea id="textInput" placeholder="文章を書いてね" rows="4" cols="40"></textarea><br>
   <button id="post">投稿</button>
 
-  <h3>投稿一覧</h3>
+  <h3>投稿一覧（リアルタイム）</h3>
   <div id="posts"></div>
 
   <!-- ★ 必ず body の一番下に置く -->
@@ -59,7 +59,9 @@
       getDoc,
       collection,
       addDoc,
-      getDocs
+      onSnapshot,
+      query,
+      orderBy
     } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
     // Firebase 設定
@@ -100,20 +102,6 @@
       document.getElementById("posts").innerHTML = "";
     };
 
-    // ★ 投稿一覧を読み込む関数
-    async function loadPosts() {
-      const postsDiv = document.getElementById("posts");
-      postsDiv.innerHTML = "";
-
-      const querySnapshot = await getDocs(collection(db, "posts"));
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const p = document.createElement("p");
-        p.textContent = `${data.author}: ${data.text}`;
-        postsDiv.appendChild(p);
-      });
-    }
-
     // ★ 投稿ボタン
     document.getElementById("post").onclick = async () => {
       const text = document.getElementById("textInput").value;
@@ -137,8 +125,26 @@
       });
 
       document.getElementById("textInput").value = "";
-      loadPosts(); // 投稿一覧を読み直す
     };
+
+    // ★ リアルタイム投稿監視
+    function startRealtimePosts() {
+      const postsDiv = document.getElementById("posts");
+      postsDiv.innerHTML = "";
+
+      const q = query(collection(db, "posts"), orderBy("createdAt", "asc"));
+
+      onSnapshot(q, (snapshot) => {
+        postsDiv.innerHTML = ""; // 一旦クリア
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const p = document.createElement("p");
+          p.textContent = `${data.author}: ${data.text}`;
+          postsDiv.appendChild(p);
+        });
+      });
+    }
 
     // ログイン状態監視 + role 判定
     onAuthStateChanged(auth, async (user) => {
@@ -164,8 +170,8 @@
           adminMessage.textContent = "";
         }
 
-        // ★ ログインしたら投稿一覧を読み込む
-        loadPosts();
+        // ★ ログインしたらリアルタイム監視開始
+        startRealtimePosts();
 
       } else {
         status.textContent = "ログアウト中";
