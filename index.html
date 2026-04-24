@@ -31,6 +31,16 @@
   <p id="status">ログアウト中</p>
   <p id="adminMessage"></p>
 
+  <hr>
+
+  <!-- ★ 投稿欄 -->
+  <h3>投稿フォーム</h3>
+  <textarea id="textInput" placeholder="文章を書いてね" rows="4" cols="40"></textarea><br>
+  <button id="post">投稿</button>
+
+  <h3>投稿一覧</h3>
+  <div id="posts"></div>
+
   <!-- ★ 必ず body の一番下に置く -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
@@ -46,7 +56,10 @@
     import { 
       getFirestore, 
       doc, 
-      getDoc 
+      getDoc,
+      collection,
+      addDoc,
+      getDocs
     } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
     // Firebase 設定
@@ -84,6 +97,47 @@
       await signOut(auth);
       document.getElementById("status").textContent = "ログアウトしました";
       document.getElementById("adminMessage").textContent = "";
+      document.getElementById("posts").innerHTML = "";
+    };
+
+    // ★ 投稿一覧を読み込む関数
+    async function loadPosts() {
+      const postsDiv = document.getElementById("posts");
+      postsDiv.innerHTML = "";
+
+      const querySnapshot = await getDocs(collection(db, "posts"));
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const p = document.createElement("p");
+        p.textContent = `${data.author}: ${data.text}`;
+        postsDiv.appendChild(p);
+      });
+    }
+
+    // ★ 投稿ボタン
+    document.getElementById("post").onclick = async () => {
+      const text = document.getElementById("textInput").value;
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("ログインしてから投稿してね");
+        return;
+      }
+
+      if (!text.trim()) {
+        alert("文章が空やで");
+        return;
+      }
+
+      // Firestore に保存
+      await addDoc(collection(db, "posts"), {
+        text: text,
+        author: user.email,
+        createdAt: Date.now()
+      });
+
+      document.getElementById("textInput").value = "";
+      loadPosts(); // 投稿一覧を読み直す
     };
 
     // ログイン状態監視 + role 判定
@@ -110,9 +164,13 @@
           adminMessage.textContent = "";
         }
 
+        // ★ ログインしたら投稿一覧を読み込む
+        loadPosts();
+
       } else {
         status.textContent = "ログアウト中";
         adminMessage.textContent = "";
+        document.getElementById("posts").innerHTML = "";
       }
     });
   </script>
